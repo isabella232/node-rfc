@@ -1,10 +1,11 @@
 /// <reference types="node" />
 import os from "os";
 const Promise = require("bluebird");
+import { isUndefined } from "util";
 import { RfcClientBinding } from "./sapnwrfc-client";
 import { RfcPoolBinding } from "./sapnwrfc-pool";
 import { RfcThroughputBinding } from "./sapnwrfc-throughput";
-import { isUndefined } from "util";
+import { RfcServerBinding } from "./sapnwrfc-server";
 
 export const USAGE_URL = "https://github.com/SAP/node-rfc#usage";
 export interface NodeRfcBindingVersions {
@@ -21,6 +22,7 @@ export interface NWRfcBinding {
     Client: RfcClientBinding;
     Pool: RfcPoolBinding;
     Throughput: RfcThroughputBinding;
+    Server: RfcServerBinding;
     verbose(): this;
     bindingVersions: NodeRfcBindingVersions;
     environment: NodeRfcEnvironment;

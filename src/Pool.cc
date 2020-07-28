@@ -17,8 +17,6 @@
 
 namespace node_rfc
 {
-    Napi::Env __env = NULL;
-
     uint_t Pool::_id = 1;
 
     class CheckPoolAsync : public Napi::AsyncWorker
@@ -617,7 +615,7 @@ namespace node_rfc
 
                 connectionParameters = Napi::Persistent(poolConfiguration.Get(POOL_KEY_CONNECTION_PARAMS).As<Napi::Object>());
 
-                checkConnectionParams(connectionParameters.Value(), &client_params);
+                getConnectionParams(connectionParameters.Value(), &client_params);
             }
 
             //
@@ -797,25 +795,6 @@ namespace node_rfc
         uv_sem_post(&leaseMutex);
     }
 
-    Napi::Value BindingVersions(Napi::Env env)
-    {
-        uint_t major, minor, patchLevel;
-        Napi::EscapableHandleScope scope(env);
-
-        RfcGetVersion(&major, &minor, &patchLevel);
-
-        Napi::Object nwrfcsdk = Napi::Object::New(env);
-        nwrfcsdk.Set("major", major);
-        nwrfcsdk.Set("minor", minor);
-        nwrfcsdk.Set("patchLevel", patchLevel);
-
-        Napi::Object version = Napi::Object::New(env);
-        version.Set("version", NODERFC_VERSION);
-        version.Set("nwrfcsdk", nwrfcsdk);
-
-        return scope.Escape(version);
-    }
-
     Napi::Value Pool::ConfigGetter(const Napi::CallbackInfo &info)
     {
         return poolConfiguration.Value();
@@ -829,18 +808,5 @@ namespace node_rfc
         status.Set("leased", Napi::Number::New(info.Env(), (double)connLeased.size()));
         return scope.Escape(status);
     }
-
-    Napi::Object RegisterModule(Napi::Env env, Napi::Object exports)
-    {
-        exports.Set("bindingVersions", BindingVersions(env));
-
-        Pool::Init(env, exports);
-        Client::Init(env, exports);
-        Throughput::Init(env, exports);
-
-        return exports;
-    }
-
-    NODE_API_MODULE(NODE_GYP_MODULE_NAME, RegisterModule);
 
 } // namespace node_rfc

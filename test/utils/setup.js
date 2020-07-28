@@ -5,6 +5,7 @@ const _abapSystem = require("./abapSystem");
 const _Client = _binding.Client;
 const _Pool = _binding.Pool;
 const _Throughput = _binding.Throughput;
+const _Server = _binding.Server;
 const _Promise = _binding.Promise;
 const _UNICODETEST = "ทดสอบสร้างลูกค้าจากภายนอกครั้งที่".repeat(7);
 const os = require("os");
@@ -41,6 +42,7 @@ module.exports = {
     binding: _binding,
     Client: _Client,
     Pool: _Pool,
+    Server: _Server,
     Throughput: _Throughput,
     Promise: _Promise,
     abapSystem: _abapSystem,

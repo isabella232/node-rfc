@@ -18,7 +18,6 @@ import {
     noderfc_binding,
     environment,
     NodeRfcEnvironment,
-    USAGE_URL,
 } from "./noderfc-bindings";
 
 //

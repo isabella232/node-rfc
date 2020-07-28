@@ -14,7 +14,7 @@
 
 "use strict";
 
-describe("Datatypes: UTCLONG", () => {
+describe.skip("Datatypes: UTCLONG", () => {
     const setup = require("../utils/setup");
     const QM7 = require("../utils/abapSystem")("QM7");
     const UTCLONG = require("../utils/config").RFC_MATH.UTCLONG;

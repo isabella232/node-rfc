@@ -13,7 +13,6 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
-#include "nwrfcsdk.h"
 #include "Client.h"
 #include "Pool.h"
 
@@ -53,17 +52,17 @@ namespace node_rfc
         return scope.Escape(error);
     }
 
-    void checkConnectionParams(Napi::Object clientParamsObject, ConnectionParamsStruct *clientParams)
+    void getConnectionParams(Napi::Object clientParamsObject, ConnectionParamsStruct *clientParams)
     {
         Napi::Array paramNames = clientParamsObject.GetPropertyNames();
         clientParams->paramSize = paramNames.Length();
-        //DEBUG("checkConnectionParams ", clientParams->paramSize);
+        DEBUG("getConnectionParams ", clientParams->paramSize);
         clientParams->connectionParams = static_cast<RFC_CONNECTION_PARAMETER *>(malloc(clientParams->paramSize * sizeof(RFC_CONNECTION_PARAMETER)));
         for (uint_t ii = 0; ii < clientParams->paramSize; ii++)
         {
             Napi::String name = paramNames.Get(ii).ToString();
-            //DEBUG("checkConnectionParams ", name.Utf8Value().c_str());
             Napi::String value = clientParamsObject.Get(name).ToString();
+            DEBUG("getConnectionParams ", name.Utf8Value(), ": ", value.Utf8Value());
             clientParams->connectionParams[ii].name = fillString(name);
             clientParams->connectionParams[ii].value = fillString(value);
         }
@@ -220,6 +219,11 @@ namespace node_rfc
         return Napi::Boolean::New(Env(), connectionHandle != NULL);
     }
 
+    Napi::Value Client::ConnectionHandleGetter(const Napi::CallbackInfo &info)
+    {
+        return Napi::Number::New(info.Env(), (double)(unsigned long long)this->connectionHandle);
+    }
+
     Napi::Value Client::ConfigGetter(const Napi::CallbackInfo &info)
     {
         Napi::Env env = info.Env();
@@ -243,11 +247,6 @@ namespace node_rfc
         }
 
         return scope.Escape(config);
-    }
-
-    Napi::Value Client::ConnectionHandleGetter(const Napi::CallbackInfo &info)
-    {
-        return Napi::Number::New(info.Env(), (double)(unsigned long long)this->connectionHandle);
     }
 
     Napi::Value Client::PoolIdGetter(const Napi::CallbackInfo &info)
@@ -320,7 +319,7 @@ namespace node_rfc
         if (info.Length() > 0)
         {
             clientParamsRef = Napi::Persistent(info[0].As<Napi::Object>());
-            checkConnectionParams(clientParamsRef.Value(), &client_params);
+            getConnectionParams(clientParamsRef.Value(), &client_params);
         }
 
         if (info.Length() > 1)
@@ -340,8 +339,6 @@ namespace node_rfc
     Client::~Client(void)
     {
         DEBUG("~ Client ", id);
-
-        destructor_call = true;
 
         if (pool == NULL)
         {
