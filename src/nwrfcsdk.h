@@ -25,10 +25,10 @@ namespace node_rfc
 {
     extern Napi::Env __env;
 
-    // Basic string operations
+    SAP_UC *fillString(const Napi::String napistr);
+
     Napi::Value wrapString(SAP_UC *uc, int length = -1);
     Napi::Value wrapString(SAP_UC const *uc, int length = -1);
-    SAP_UC *fillString(const Napi::String napistr);
 
     //
     // Client connection parameters internal representation
@@ -300,6 +300,23 @@ namespace node_rfc
         }
 
     } RfmErrorPath;
+
+    //
+    // Wrap/Fill operations
+    //
+    typedef std::pair<Napi::Value, Napi::Value> ValuePair;
+    typedef std::pair<RFC_ERROR_INFO, std::string> ErrorPair;
+
+    // Wrap
+    ValuePair wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle, RfmErrorPath *errorPath, ClientOptionsStruct *client_options);
+    ValuePair wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, uint_t cLen, RFC_TYPE_DESC_HANDLE typeDesc, RfmErrorPath *errorPath, ClientOptionsStruct *client_options);
+    ValuePair wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, RfmErrorPath *errorPath, ClientOptionsStruct *client_options);
+
+    // Fill
+    SAP_UC *fillString(std::string str);
+    Napi::Value fillFunctionParameter(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, Napi::String name, Napi::Value value, RfmErrorPath *errorPath, ClientOptionsStruct *client_options);
+    Napi::Value fillStructure(RFC_STRUCTURE_HANDLE structHandle, RFC_TYPE_DESC_HANDLE functionDescHandle, SAP_UC *cName, Napi::Value value, RfmErrorPath *errorPath, ClientOptionsStruct *client_options);
+    Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, Napi::Value value, RFC_TYPE_DESC_HANDLE functionDescHandle, RfmErrorPath *errorPath, ClientOptionsStruct *client_options);
 
     // RFC ERRORS
     Napi::Object RfcLibError(RFC_ERROR_INFO *errorInfo);

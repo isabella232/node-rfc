@@ -159,27 +159,41 @@ namespace node_rfc
         RFC_FUNCTION_DESC_HANDLE func_desc_handle = it->second.func_desc_handle;
         uint_t paramCount;
 
-        // Get parameters
+        //
+        // ABAP -> JS parameters
+        //
+        //RfmErrorPath errorPath;
+        //ClientOptionsStruct client_options;
+        //ValuePair jsContainer = wrapResult(func_desc_handle, func_handle, &errorPath, &client_options);
+
+        //
+        // Call
+        //
+        //it->second.callback.Call({jsContainer});
+
+        //
+        // JS -> ABAP
+        //
+        //uint_t paramCount;
         RfcGetParameterCount(func_desc_handle, &paramCount, errorInfo);
         if (errorInfo->code != RFC_OK)
         {
             return errorInfo->code;
         }
-        for (uint_t i = 0; i < paramCount; i++)
-        {
-            RFC_PARAMETER_DESC param_desc;
-            RfcGetParameterDescByIndex(func_desc_handle, i, &param_desc, NULL);
-            printf("Parameter type: %u name: ", param_desc.type);
-            printfU(param_desc.name);
-            printf(" direction: %u\n", param_desc.direction);
-        }
-        /*
-        // todo https://github.com/nodejs/node-addon-api/issues/779
-        Napi::Value jsContainer;
-        // todo: Wrap func_handle exports -> jsContainer inputs
-        it->second.callback.Call({jsContainer});
-        // todo: Fill jsContainer outputs -> func_handle imports
-        */
+
+        //Napi::Value err = Undefined();
+        //for (uint_t i = 0; i < paramCount; i++)
+        //{
+        //    Napi::String name = paramNames.Get(i).ToString();
+        //    Napi::Value value = params.Get(name);
+        //    err = client->fillFunctionParameter(functionDescHandle, functionHandle, name, value);
+        //
+        //    if (!err.IsUndefined())
+        //    {
+        //        break;
+        //    }
+        //}
+
         return RFC_OK;
     }
 

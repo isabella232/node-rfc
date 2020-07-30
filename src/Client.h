@@ -26,9 +26,6 @@ namespace node_rfc
     void getConnectionParams(Napi::Object clientParamsObject, ConnectionParamsStruct *clientParams);
     void checkClientOptions(Napi::Object clientOptionsObject, ClientOptionsStruct *clientOptions);
 
-    typedef std::pair<Napi::Value, Napi::Value> ValuePair;
-    typedef std::pair<RFC_ERROR_INFO, std::string> ErrorPair;
-
     class Client : public Napi::ObjectWrap<Client>
     {
     public:
@@ -67,15 +64,6 @@ namespace node_rfc
         Napi::Value ResetServerContext(const Napi::CallbackInfo &info);
         Napi::Value Ping(const Napi::CallbackInfo &info);
         Napi::Value Invoke(const Napi::CallbackInfo &info);
-
-        SAP_UC *fillString(std::string str);
-        Napi::Value fillFunctionParameter(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, Napi::String name, Napi::Value value);
-        Napi::Value fillStructure(RFC_STRUCTURE_HANDLE structHandle, RFC_TYPE_DESC_HANDLE functionDescHandle, SAP_UC *cName, Napi::Value value);
-        Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, Napi::Value value, RFC_TYPE_DESC_HANDLE functionDescHandle);
-
-        ValuePair wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle);
-        ValuePair wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, uint_t cLen, RFC_TYPE_DESC_HANDLE typeDesc);
-        ValuePair wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle);
 
         RfmErrorPath errorPath;
 
