@@ -14,6 +14,7 @@
 // language governing permissions and limitations under the License.
 
 #include "Server.h"
+#include <v8.h>
 
 namespace node_rfc
 {
@@ -144,7 +145,6 @@ namespace node_rfc
         {
             if (strcmpU(func_name, it->second.func_name) == 0)
             {
-                rc = RFC_OK;
                 DEBUG("genericHandler found: ", (pointer_t)it->second.func_desc_handle);
                 break;
             }
@@ -155,6 +155,24 @@ namespace node_rfc
         {
             return rc;
         }
+
+        RFC_FUNCTION_DESC_HANDLE func_desc_handle = it->second.func_desc_handle;
+        uint_t paramCount;
+
+        // Get parameters
+        RfcGetParameterCount(func_desc_handle, &paramCount, errorInfo);
+        if (errorInfo->code != RFC_OK)
+        {
+            return errorInfo->code;
+        }
+        for (uint_t i = 0; i < paramCount; i++)
+        {
+            RFC_PARAMETER_DESC param_desc;
+            RfcGetParameterDescByIndex(func_desc_handle, i, &param_desc, NULL);
+            printf("Parameter type: %u name: ", param_desc.type);
+            printfU(param_desc.name);
+            printf(" direction: %u\n", param_desc.direction);
+        }
         /*
         // todo https://github.com/nodejs/node-addon-api/issues/779
         Napi::Value jsContainer;
@@ -162,7 +180,7 @@ namespace node_rfc
         it->second.callback.Call({jsContainer});
         // todo: Fill jsContainer outputs -> func_handle imports
         */
-        return rc;
+        return RFC_OK;
     }
 
     class ServeAsync : public Napi::AsyncWorker
