@@ -26,19 +26,37 @@ import { RfcConnectionParameters } from "./sapnwrfc-client";
 //
 
 export interface RfcServerBinding {
-    new (connectionParameters: RfcConnectionParameters): RfcServerBinding;
-    (connectionParameters: RfcConnectionParameters): RfcServerBinding;
+    new (
+        serverParams: RfcConnectionParameters,
+        clientParams: RfcConnectionParameters
+    ): RfcServerBinding;
+    (
+        serverParams: RfcConnectionParameters,
+        clientParams: RfcConnectionParameters
+    ): RfcServerBinding;
     _id: number;
     _alive: boolean;
-    _connectionHandle: number;
-    register(callback: Function): void | Promise<void>;
+    _server_conn_handle: number;
+    _client_conn_handle: number;
+    register(callback: Function): void;
+    addFunction(
+        functionName: string,
+        jsFunction: Function,
+        callback: Function
+    ): void;
+    removeFunction(functionName: string, callback: Function): void;
+    serve(callback: Function): void;
+    getFunctionDescription(rfmName: string, callback: Function): void;
 }
 
 export class Server {
     private __server: RfcServerBinding;
 
-    constructor(connectionParameters: RfcConnectionParameters) {
-        this.__server = new noderfc_binding.Server(connectionParameters);
+    constructor(
+        serverParams: RfcConnectionParameters,
+        clientParams: RfcConnectionParameters
+    ) {
+        this.__server = new noderfc_binding.Server(serverParams, clientParams);
     }
 
     register(callback?: Function) {
@@ -55,6 +73,81 @@ export class Server {
         }
 
         this.__server.register(callback);
+    }
+
+    addFunction(
+        functionName: string,
+        jsFunction: Function,
+        callback?: Function
+    ) {
+        if (isUndefined(callback)) {
+            return new Promise((resolve, reject) => {
+                this.__server.addFunction(
+                    functionName,
+                    jsFunction,
+                    (err: any) => {
+                        if (isUndefined(err)) {
+                            resolve();
+                        } else {
+                            reject(err);
+                        }
+                    }
+                );
+            });
+        }
+
+        this.__server.addFunction(functionName, jsFunction, callback);
+    }
+
+    removeFunction(functionName: string, callback?: Function) {
+        if (isUndefined(callback)) {
+            return new Promise((resolve, reject) => {
+                this.__server.removeFunction(functionName, (err: any) => {
+                    if (isUndefined(err)) {
+                        resolve();
+                    } else {
+                        reject(err);
+                    }
+                });
+            });
+        }
+
+        this.__server.removeFunction(functionName, callback);
+    }
+
+    serve(callback?: Function) {
+        if (isUndefined(callback)) {
+            return new Promise((resolve, reject) => {
+                this.__server.serve((err: any) => {
+                    if (isUndefined(err)) {
+                        resolve();
+                    } else {
+                        reject(err);
+                    }
+                });
+            });
+        }
+
+        this.__server.serve(callback);
+    }
+
+    getFunctionDescription(rfmName: string, callback?: Function) {
+        if (isUndefined(callback)) {
+            return new Promise((resolve, reject) => {
+                this.__server.getFunctionDescription(
+                    rfmName,
+                    (err: any, rfmFunctionDescription: object) => {
+                        if (isUndefined(err)) {
+                            resolve(rfmFunctionDescription);
+                        } else {
+                            reject(err);
+                        }
+                    }
+                );
+            });
+        }
+
+        this.__server.serve(callback);
     }
 
     static get environment(): NodeRfcEnvironment {
@@ -77,7 +170,11 @@ export class Server {
         return this.__server._alive;
     }
 
-    get connectionHandle(): number {
-        return this.__server._connectionHandle;
+    get server_connection(): number {
+        return this.__server._server_conn_handle;
+    }
+
+    get client_connection(): number {
+        return this.__server._client_conn_handle;
     }
 }

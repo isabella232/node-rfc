@@ -57,7 +57,7 @@ export interface RfcPoolBinding {
         callback: Function
     ): void;
     ready(new_ready?: number, callback?: Function): void;
-    closeAll(callback?: Function): void | Promise<void>;
+    closeAll(callback?: Function): void;
     _config: {
         connectionParameters: object;
         clientOptions?: object;

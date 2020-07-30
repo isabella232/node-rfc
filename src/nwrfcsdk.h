@@ -27,6 +27,7 @@ namespace node_rfc
 
     // Basic string operations
     Napi::Value wrapString(SAP_UC *uc, int length = -1);
+    Napi::Value wrapString(SAP_UC const *uc, int length = -1);
     SAP_UC *fillString(const Napi::String napistr);
 
     //

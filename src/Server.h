@@ -16,8 +16,41 @@
 #define NodeRfc_Server_H
 
 #include <uv.h>
+#include <map>
 #include "Client.h"
+typedef struct _ServerFunctionStruct
+{
+    RFC_ABAP_NAME func_name;
+    RFC_FUNCTION_DESC_HANDLE func_desc_handle = NULL;
+    Napi::FunctionReference callback;
 
+    _ServerFunctionStruct()
+    {
+        func_name[0] = 0;
+    }
+
+    _ServerFunctionStruct(RFC_ABAP_NAME name, RFC_FUNCTION_DESC_HANDLE desc_handle, Napi::Function cb)
+    {
+        strcpyU(func_name, name);
+        func_desc_handle = desc_handle;
+        callback = Napi::Persistent(cb);
+    }
+
+    _ServerFunctionStruct &operator=(_ServerFunctionStruct &src) // note: passed by copy
+    {
+        strcpyU(func_name, src.func_name);
+        func_desc_handle = src.func_desc_handle;
+        callback = Napi::Persistent(src.callback.Value());
+        return *this;
+    }
+
+    ~_ServerFunctionStruct()
+    {
+        callback.Reset();
+    }
+} ServerFunctionStruct;
+
+typedef std::map<std::string, ServerFunctionStruct> ServerFunctionsMap;
 namespace node_rfc
 {
     extern Napi::Env __env;
@@ -25,21 +58,34 @@ namespace node_rfc
     class Server : public Napi::ObjectWrap<Server>
     {
     public:
-        friend class RegisterAsync;
+        friend class ServeAsync;
+        friend class GetFunctionDescAsync;
         static Napi::Object Init(Napi::Env env, Napi::Object exports);
         Server(const Napi::CallbackInfo &info);
         ~Server(void);
+        ServerFunctionsMap serverFunctions;
 
     private:
         Napi::Value IdGetter(const Napi::CallbackInfo &info);
         Napi::Value AliveGetter(const Napi::CallbackInfo &info);
-        Napi::Value ConnectionHandleGetter(const Napi::CallbackInfo &info);
+        Napi::Value ServerConnectionHandleGetter(const Napi::CallbackInfo &info);
+        Napi::Value ClientConnectionHandleGetter(const Napi::CallbackInfo &info);
 
         Napi::Value Register(const Napi::CallbackInfo &info);
+        Napi::Value AddFunction(const Napi::CallbackInfo &info);
+        Napi::Value RemoveFunction(const Napi::CallbackInfo &info);
+        Napi::Value Serve(const Napi::CallbackInfo &info);
+        Napi::Value GetFunctionDescription(const Napi::CallbackInfo &info);
+        //RFC_RC SAP_API metadataLookup(SAP_UC *func_name, RFC_ATTRIBUTES rfc_attributes, RFC_FUNCTION_DESC_HANDLE *func_handle);
+        //RFC_RC SAP_API genericHandler(RFC_CONNECTION_HANDLE conn_handle, RFC_FUNCTION_HANDLE func_handle, RFC_ERROR_INFO *errorInfo);
 
-        Napi::ObjectReference clientParamsRef;
-        RFC_CONNECTION_HANDLE connectionHandle;
+        RFC_CONNECTION_HANDLE server_conn_handle;
+        RFC_CONNECTION_HANDLE client_conn_handle;
+        RFC_SERVER_HANDLE serverHandle;
+        ConnectionParamsStruct server_params;
         ConnectionParamsStruct client_params;
+        Napi::ObjectReference serverParamsRef;
+        Napi::ObjectReference clientParamsRef;
 
         void init(Napi::Env env)
         {
@@ -49,7 +95,9 @@ namespace node_rfc
             };
             id = Server::_id++;
 
-            connectionHandle = NULL;
+            server_conn_handle = NULL;
+            client_conn_handle = NULL;
+            serverHandle = NULL;
 
             uv_sem_init(&invocationMutex, 1);
         };
