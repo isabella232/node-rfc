@@ -23,8 +23,6 @@ namespace node_rfc
     extern Napi::Env __env;
 
     class Pool;
-    void getConnectionParams(Napi::Object clientParamsObject, ConnectionParamsStruct *clientParams);
-    void checkClientOptions(Napi::Object clientOptionsObject, ClientOptionsStruct *clientOptions);
 
     class Client : public Napi::ObjectWrap<Client>
     {

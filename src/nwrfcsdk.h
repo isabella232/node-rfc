@@ -320,5 +320,9 @@ namespace node_rfc
     Napi::Value rfcSdkError(RFC_ERROR_INFO *errorInfo, RfmErrorPath *errorPath = NULL);
     Napi::Value nodeRfcError(std::string message, RfmErrorPath *errorPath = NULL);
 
+    // Connection parameters and client options parsers
+    void getConnectionParams(Napi::Object clientParamsObject, ConnectionParamsStruct *clientParams);
+    void checkClientOptions(Napi::Object clientOptionsObject, ClientOptionsStruct *clientOptions);
+
 } // namespace node_rfc
 #endif

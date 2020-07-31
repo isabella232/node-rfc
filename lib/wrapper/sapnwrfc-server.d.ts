@@ -1,25 +1,25 @@
 import { NodeRfcEnvironment } from "./noderfc-bindings";
-import { RfcConnectionParameters } from "./sapnwrfc-client";
+import { RfcConnectionParameters, RfcClientOptions } from "./sapnwrfc-client";
 export interface RfcServerBinding {
-    new (serverParams: RfcConnectionParameters, clientParams: RfcConnectionParameters): RfcServerBinding;
-    (serverParams: RfcConnectionParameters, clientParams: RfcConnectionParameters): RfcServerBinding;
+    new (serverParams: RfcConnectionParameters, clientParams: RfcConnectionParameters, clientOptions?: RfcClientOptions): RfcServerBinding;
+    (serverParams: RfcConnectionParameters, clientParams: RfcConnectionParameters, clientOptions?: RfcClientOptions): RfcServerBinding;
     _id: number;
     _alive: boolean;
     _server_conn_handle: number;
     _client_conn_handle: number;
     start(callback: Function): void;
     stop(callback: Function): void;
-    addFunction(functionName: string, jsFunction: Function, callback: Function): void;
-    removeFunction(functionName: string, callback: Function): void;
+    addFunction(abapFunctionName: string, jsFunction: Function, callback: Function): void;
+    removeFunction(abapFunctionName: string, callback: Function): void;
     getFunctionDescription(rfmName: string, callback: Function): void;
 }
 export declare class Server {
     private __server;
-    constructor(serverParams: RfcConnectionParameters, clientParams: RfcConnectionParameters);
-    start(callback?: Function): Promise<unknown> | undefined;
-    stop(callback?: Function): Promise<unknown> | undefined;
-    addFunction(functionName: string, jsFunction: Function, callback?: Function): Promise<unknown> | undefined;
-    removeFunction(functionName: string, callback?: Function): Promise<unknown> | undefined;
+    constructor(serverParams: RfcConnectionParameters, clientParams: RfcConnectionParameters, clientOptions?: RfcClientOptions);
+    start(callback?: Function): void | Promise<void>;
+    stop(callback?: Function): void | Promise<void>;
+    addFunction(abapFunctionName: string, jsFunction: Function, callback?: Function): void | Promise<void>;
+    removeFunction(abapFunctionName: string, callback?: Function): void | Promise<void>;
     getFunctionDescription(rfmName: string, callback?: Function): Promise<unknown> | undefined;
     static get environment(): NodeRfcEnvironment;
     get environment(): NodeRfcEnvironment;

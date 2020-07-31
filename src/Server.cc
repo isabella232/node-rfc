@@ -93,12 +93,24 @@ namespace node_rfc
 
         clientParamsRef = Napi::Persistent(info[1].As<Napi::Object>());
         getConnectionParams(clientParamsRef.Value(), &client_params);
+
+        if (!info[2].IsUndefined())
+        {
+            if (!info[2].IsObject())
+            {
+                Napi::TypeError::New(Env(), "Server constructor client options must be an object").ThrowAsJavaScriptException();
+                return;
+            }
+            clientOptionsRef = Napi::Persistent(info[2].As<Napi::Object>());
+            checkClientOptions(clientOptionsRef.Value(), &client_options);
+        }
     };
 
     RFC_RC SAP_API metadataLookup(SAP_UC const *func_name, RFC_ATTRIBUTES rfc_attributes, RFC_FUNCTION_DESC_HANDLE *func_desc_handle)
     {
-        DEBUG("metadataLookup looking for: ");
+        printf("Metadata lookup for: ");
         printfU(func_name);
+        printf("\n");
 
         RFC_RC rc = RFC_NOT_FOUND;
 
@@ -138,15 +150,16 @@ namespace node_rfc
             return errorInfo->code;
         }
 
-        DEBUG("genericHandler ", (pointer_t)func_handle);
+        printf("genericHandler for: ");
         printfU(func_name);
+        printf(" func_handle: %lu\n", (pointer_t)func_handle);
 
         ServerFunctionsMap::iterator it = server->serverFunctions.begin();
         while (it != server->serverFunctions.end())
         {
             if (strcmpU(func_name, it->second.func_name) == 0)
             {
-                DEBUG("genericHandler found: ", (pointer_t)it->second.func_desc_handle);
+                printf("found func_desc %lu\n", (pointer_t)it->second.func_desc_handle);
                 break;
             }
             it++;
@@ -154,6 +167,7 @@ namespace node_rfc
 
         if (it == server->serverFunctions.end())
         {
+            printf("not found!\n");
             return rc;
         }
 
@@ -168,14 +182,14 @@ namespace node_rfc
         //ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &errorPath, &client_options);
 
         //
-        // Call
+        // JS Call
         //
         //it->second.callback.Call({jsContainer});
 
         //
-        // JS -> ABAP
+        // JS -> ABAP parameters
         //
-        //uint_t paramCount;
+
         RfcGetParameterCount(func_desc_handle, &paramCount, errorInfo);
         if (errorInfo->code != RFC_OK)
         {

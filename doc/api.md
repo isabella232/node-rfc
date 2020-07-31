@@ -271,9 +271,50 @@ Usage: [usage/server](usage.md#server)
 
 ### Constructor
 
+```ts
+export interface RfcServerBinding {
+    new (
+        serverParams: RfcConnectionParameters,
+        clientParams: RfcConnectionParameters,
+        clientOptions?: RfcClientOptions
+    ): RfcServerBinding;
+}
+```
+
 <a name="server-api"></a>
 
 ### Server API
+
+#### start
+
+```ts
+start(callback?: Function): void | Promise<void>
+```
+
+#### stop
+
+```ts
+stop(callback?: Function): void | Promise<void>
+```
+
+### addFunction
+
+```ts
+addFunction(
+    abapfunctionName: string,
+    jsFunction: Function,
+    callback?: Function
+): void | Promise<void>
+```
+
+### removeFunction
+
+```ts
+removeFunction(
+    abapFunctionName: string,
+    callback?: Function
+): void | Promise<void>
+```
 
 ## Throughput
 

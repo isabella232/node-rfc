@@ -20,7 +20,7 @@ import {
     NodeRfcEnvironment,
 } from "./noderfc-bindings";
 
-import { RfcConnectionParameters } from "./sapnwrfc-client";
+import { RfcConnectionParameters, RfcClientOptions } from "./sapnwrfc-client";
 //
 // RfcServer
 //
@@ -28,11 +28,13 @@ import { RfcConnectionParameters } from "./sapnwrfc-client";
 export interface RfcServerBinding {
     new (
         serverParams: RfcConnectionParameters,
-        clientParams: RfcConnectionParameters
+        clientParams: RfcConnectionParameters,
+        clientOptions?: RfcClientOptions
     ): RfcServerBinding;
     (
         serverParams: RfcConnectionParameters,
-        clientParams: RfcConnectionParameters
+        clientParams: RfcConnectionParameters,
+        clientOptions?: RfcClientOptions
     ): RfcServerBinding;
     _id: number;
     _alive: boolean;
@@ -41,11 +43,11 @@ export interface RfcServerBinding {
     start(callback: Function): void;
     stop(callback: Function): void;
     addFunction(
-        functionName: string,
+        abapFunctionName: string,
         jsFunction: Function,
         callback: Function
     ): void;
-    removeFunction(functionName: string, callback: Function): void;
+    removeFunction(abapFunctionName: string, callback: Function): void;
     getFunctionDescription(rfmName: string, callback: Function): void;
 }
 
@@ -54,12 +56,24 @@ export class Server {
 
     constructor(
         serverParams: RfcConnectionParameters,
-        clientParams: RfcConnectionParameters
+        clientParams: RfcConnectionParameters,
+        clientOptions?: RfcClientOptions
     ) {
-        this.__server = new noderfc_binding.Server(serverParams, clientParams);
+        if (!isUndefined(clientOptions)) {
+            this.__server = new noderfc_binding.Server(
+                serverParams,
+                clientParams,
+                clientOptions
+            );
+        } else {
+            this.__server = new noderfc_binding.Server(
+                serverParams,
+                clientParams
+            );
+        }
     }
 
-    start(callback?: Function) {
+    start(callback?: Function): void | Promise<void> {
         if (isUndefined(callback)) {
             return new Promise((resolve, reject) => {
                 this.__server.start((err: any) => {
@@ -75,7 +89,7 @@ export class Server {
         this.__server.start(callback);
     }
 
-    stop(callback?: Function) {
+    stop(callback?: Function): void | Promise<void> {
         if (isUndefined(callback)) {
             return new Promise((resolve, reject) => {
                 this.__server.stop((err: any) => {
@@ -92,14 +106,14 @@ export class Server {
     }
 
     addFunction(
-        functionName: string,
+        abapFunctionName: string,
         jsFunction: Function,
         callback?: Function
-    ) {
+    ): void | Promise<void> {
         if (isUndefined(callback)) {
             return new Promise((resolve, reject) => {
                 this.__server.addFunction(
-                    functionName,
+                    abapFunctionName,
                     jsFunction,
                     (err: any) => {
                         if (isUndefined(err)) {
@@ -112,13 +126,16 @@ export class Server {
             });
         }
 
-        this.__server.addFunction(functionName, jsFunction, callback);
+        this.__server.addFunction(abapFunctionName, jsFunction, callback);
     }
 
-    removeFunction(functionName: string, callback?: Function) {
+    removeFunction(
+        abapFunctionName: string,
+        callback?: Function
+    ): void | Promise<void> {
         if (isUndefined(callback)) {
             return new Promise((resolve, reject) => {
-                this.__server.removeFunction(functionName, (err: any) => {
+                this.__server.removeFunction(abapFunctionName, (err: any) => {
                     if (isUndefined(err)) {
                         resolve();
                     } else {
@@ -128,7 +145,7 @@ export class Server {
             });
         }
 
-        this.__server.removeFunction(functionName, callback);
+        this.__server.removeFunction(abapFunctionName, callback);
     }
 
     getFunctionDescription(rfmName: string, callback?: Function) {

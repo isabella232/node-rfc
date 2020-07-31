@@ -967,4 +967,136 @@ namespace node_rfc
         return scope.Escape(errorObj);
     }
 
+    ////////////////////////////////////////////////////////////////////////////////
+    // Connection parameters and client options parsers
+    ////////////////////////////////////////////////////////////////////////////////
+
+    void getConnectionParams(Napi::Object clientParamsObject, ConnectionParamsStruct *clientParams)
+    {
+        Napi::Array paramNames = clientParamsObject.GetPropertyNames();
+        clientParams->paramSize = paramNames.Length();
+        DEBUG("getConnectionParams ", clientParams->paramSize);
+        clientParams->connectionParams = static_cast<RFC_CONNECTION_PARAMETER *>(malloc(clientParams->paramSize * sizeof(RFC_CONNECTION_PARAMETER)));
+        for (uint_t ii = 0; ii < clientParams->paramSize; ii++)
+        {
+            Napi::String name = paramNames.Get(ii).ToString();
+            Napi::String value = clientParamsObject.Get(name).ToString();
+            DEBUG("getConnectionParams ", name.Utf8Value(), ": ", value.Utf8Value());
+            clientParams->connectionParams[ii].name = setString(name);
+            clientParams->connectionParams[ii].value = setString(value);
+        }
+    }
+
+    void checkClientOptions(Napi::Object clientOptionsObject, ClientOptionsStruct *client_options)
+    {
+        char errmsg[254];
+        Napi::Array props = clientOptionsObject.GetPropertyNames();
+        for (uint_t ii = 0; ii < props.Length(); ii++)
+        {
+            std::string key = props.Get(ii).ToString().Utf8Value();
+            Napi::Value opt = clientOptionsObject.Get(key).As<Napi::Value>();
+
+            // Client option: "bcd"
+            if (key.compare(std::string(CLIENT_OPTION_KEY_BCD)) == 0)
+            {
+                if (opt.IsFunction())
+                {
+                    client_options->bcd = CLIENT_OPTION_BCD_FUNCTION;
+                    client_options->bcdFunction = Napi::Persistent(opt.As<Napi::Function>());
+                }
+                else if (opt.IsString())
+                {
+                    std::string bcdString = opt.ToString().Utf8Value();
+                    if (bcdString.compare(std::string("number")) == 0)
+                    {
+                        client_options->bcd = CLIENT_OPTION_BCD_NUMBER;
+                    }
+                    else
+                    {
+                        sprintf(errmsg, "Client option \"%s\" value not allowed: \"%s\"; see %s", CLIENT_OPTION_KEY_BCD, &bcdString[0], USAGE_URL);
+                        Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
+                    }
+                }
+            }
+
+            // Client option: "date"
+            else if (key.compare(std::string(CLIENT_OPTION_KEY_DATE)) == 0)
+            {
+                if (!opt.IsObject())
+                {
+                    opt = node_rfc::__env.Null();
+                }
+                else
+                {
+                    Napi::Value toABAP = opt.As<Napi::Object>().Get("toABAP");
+                    Napi::Value fromABAP = opt.As<Napi::Object>().Get("fromABAP");
+                    if (!toABAP.IsFunction() || !fromABAP.IsFunction())
+                    {
+                        sprintf(errmsg, "Client option \"%s\" is not an object with toABAP() and fromABAP() functions; see %s", CLIENT_OPTION_KEY_DATE, USAGE_URL);
+                        Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
+                    }
+                    else
+                    {
+                        client_options->dateToABAP = Napi::Persistent(toABAP.As<Napi::Function>());
+                        client_options->dateFromABAP = Napi::Persistent(fromABAP.As<Napi::Function>());
+                    }
+                }
+            }
+
+            // Client option: "time"
+            else if (key.compare(std::string(CLIENT_OPTION_KEY_TIME)) == 0)
+            {
+                if (!opt.IsObject())
+                {
+                    opt = node_rfc::__env.Null();
+                }
+                else
+                {
+                    Napi::Value toABAP = opt.As<Napi::Object>().Get("toABAP");
+                    Napi::Value fromABAP = opt.As<Napi::Object>().Get("fromABAP");
+                    if (!toABAP.IsFunction() || !fromABAP.IsFunction())
+                    {
+                        sprintf(errmsg, "Client option \"%s\" is not an object with toABAP() and fromABAP() functions; see %s", CLIENT_OPTION_KEY_TIME, USAGE_URL);
+                        Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
+                        ;
+                    }
+                    else
+                    {
+                        client_options->timeToABAP = Napi::Persistent(toABAP.As<Napi::Function>());
+                        client_options->timeFromABAP = Napi::Persistent(fromABAP.As<Napi::Function>());
+                    }
+                }
+            }
+
+            // Client option: "filter"
+            else if (key.compare(std::string(CLIENT_OPTION_KEY_FILTER)) == 0)
+            {
+                client_options->filter_param_type = (RFC_DIRECTION)clientOptionsObject.Get(key).As<Napi::Number>().Uint32Value();
+                if (((int)client_options->filter_param_type < 1) || ((int)client_options->filter_param_type) > 4)
+                {
+                    sprintf(errmsg, "Client option \"%s\" value allowed: \"%u\"; see %s", CLIENT_OPTION_KEY_FILTER, (uint_t)client_options->filter_param_type, USAGE_URL);
+                    Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
+                }
+            }
+
+            // Client option: "stateless"
+            else if (key.compare(std::string(CLIENT_OPTION_KEY_STATELESS)) == 0)
+            {
+                if (!clientOptionsObject.Get(key).IsBoolean())
+                {
+                    sprintf(errmsg, "Client option \"%s\" requires a boolean value; see %s", CLIENT_OPTION_KEY_STATELESS, USAGE_URL);
+                    Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
+                }
+                client_options->stateless = clientOptionsObject.Get(key).As<Napi::Boolean>();
+            }
+
+            // Client option: unknown
+            else
+            {
+                sprintf(errmsg, "Client option not allowed: \"%s\"; see %s", key.c_str(), USAGE_URL);
+                Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
+            }
+        }
+    }
+
 } // namespace node_rfc

@@ -84,8 +84,10 @@ namespace node_rfc
         RFC_SERVER_HANDLE serverHandle;
         ConnectionParamsStruct server_params;
         ConnectionParamsStruct client_params;
+        ClientOptionsStruct client_options;
         Napi::ObjectReference serverParamsRef;
         Napi::ObjectReference clientParamsRef;
+        Napi::ObjectReference clientOptionsRef;
 
         void init(Napi::Env env)
         {
