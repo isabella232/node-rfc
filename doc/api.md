@@ -6,6 +6,7 @@
     -   [Properties](#pool-properties)
     -   [Constructor](#pool-constructor)
     -   [API](#pool-api)
+-   **[Server](#server)**
 -   **[Throughput](#throughput)**
     -   [Properties](#throughput-properties)
     -   [Constructor](#throughput-constructor)
@@ -289,7 +290,11 @@ export interface RfcThroughputStatus {
 constructor(client?: Client | Array<Client>)
 ```
 
-### Throughput API
+## Server
+
+Usage: [usage/server](usage.md#server)
+
+### Throughput
 
 #### setOnConnection
 

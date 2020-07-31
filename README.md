@@ -2,7 +2,7 @@
 
 :exclamation: **[CHANGELOG with breaking changes](https://github.com/SAP/node-rfc/releases/tag/v2.0.0)**
 
-Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/product/connectors/nwrfcsdk.html) client bindings for [Node.js](http://nodejs.org/), providing convenient ABAP business logic consumption from NodeJS.
+Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/product/connectors/nwrfcsdk.html) bindings for [Node.js](http://nodejs.org/).
 
 [![NPM](https://nodei.co/npm/node-rfc.png?downloads=true&downloadRank=true)](https://nodei.co/npm/node-rfc/)
 
@@ -14,14 +14,15 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 
 ## Key features
 
--   Based on [N-API](https://github.com/nodejs/node-addon-api) standard
+-   Client scenario (NodeJS calls ABAP) and server scenario (ABAP calls NodeJS)
+-   Automatic conversion between NodeJS and ABAP datatypes
+-   Throughput monitoring: number of calls, bytes sent/received, application/total time; SAP NWRFC SDK >= 7.53 required
 -   Stateless and stateful connections (multiple function calls in the same ABAP session (same context))
+-   Sequential and parallel calls, using one or more clients
+-   Direct and managed connections (connection pool)
+-   Based on [N-API](https://github.com/nodejs/node-addon-api) standard
 -   Async/await, promise and callback API
 -   ECMAScript, TypeScript
--   Sequential and parallel calls, using one or more clients
--   Automatic conversion between NodeJS and ABAP datatypes
--   Direct and managed connections (connection pool)
--   Throughput monitoring: number of calls, bytes sent/received, application/total time; SAP NWRFC SDK >= 7.53 required
 
 ## Content
 
@@ -32,11 +33,13 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 -   **[Usage](doc/usage.md)**
     -   **[Authentication](doc/authentication.md)**
     -   **[Client](doc/usage.md/#client-toc)**
+    -   **[Server](doc/usage.md/#server-toc)**
     -   **[Connection Pool](doc/usage.md/#connection-pool)**
     -   **[Throughput](doc/usage.md/#throughput)**
 -   **[API](doc/api.md)**
     -   **[Connection Pool](doc/api.md/#connection-pool)**
     -   **[Client](doc/api.md/#client)**
+    -   **[Server](doc/api.md/#server)**
     -   **[Throughput](doc/api.md/#throughput)**
 -   **[Troubleshooting](doc/troubleshooting.md)**
 -   **[More resource and info about SAP Connectors and RFC communication](#resources)**

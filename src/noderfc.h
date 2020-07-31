@@ -28,14 +28,14 @@
 //
 // Logging
 //
-//#define LOG_RFC_CLIENT 1
+#define LOG_RFC_CLIENT 1
 
 #ifdef LOG_RFC_CLIENT
 // Version unit test will fail, preventing the release with activated logging
 #define NODERFC_VERSION "Deactivate logging: LOG_RFC_CLIENT"
 #else
 // client binding version
-#define NODERFC_VERSION "2.0.3"
+#define NODERFC_VERSION "3.0.0"
 #endif
 
 template <typename... Args>

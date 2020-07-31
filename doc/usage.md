@@ -27,6 +27,7 @@
 -   **[Connection Pool](#connection-pool)**
     -   [Pool Options](#pool-options)
 -   **[Closing connections](#closing-connections)**
+-   **[Server](#server)**
 -   **[Throughput](#throughput)**
 -   **[Environment](#environment)**
 
@@ -497,6 +498,23 @@ is managed, the pool leased connections set is updated.
 | group     | LOGON_FAILURE             | Error message raised when logon fails                                                                       |
 | group     | COMMUNICATION_FAILURE     | Problems with the network connection (or backend broke down and killed the connection)                      |
 | group     | EXTERNAL_RUNTIME_FAILURE  | Problems in the RFC runtime of the external program (i.e "this" library)                                    |
+
+## Server
+
+API: [api/server](api.md#server)
+
+To make an NodeJS function available in ABAP, it must provide an ABAP function definition.
+ABAP can then consume it just like any other ABAP RFM. Manual coding each parameter,
+structure, table and field metadata is tedious task and ABAP offer a simple solution here.
+Just create an empty ABAP RFM, with the signature that ABAP shall use, to consume the
+NodeJS function. The NodeJS function will automatically fetch this signature and represent
+itself as exactly such ABAP RFM. This local ABAP RFM can also help in testing and troubleshooting.
+
+The `STFC_CONNECTION` ABAP RFM is consumed by NodeJS, in client scenarion examples.
+
+Let provide the `STFC_CONNECTION` RFM in NodeJS and consume it from ABAP.
+
+The ABAP signature is already available, therefore no need to create an empty ABAP RFM for that.
 
 ## Throughput
 

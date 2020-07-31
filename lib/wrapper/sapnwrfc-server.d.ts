@@ -7,19 +7,19 @@ export interface RfcServerBinding {
     _alive: boolean;
     _server_conn_handle: number;
     _client_conn_handle: number;
-    register(callback: Function): void;
+    start(callback: Function): void;
+    stop(callback: Function): void;
     addFunction(functionName: string, jsFunction: Function, callback: Function): void;
     removeFunction(functionName: string, callback: Function): void;
-    serve(callback: Function): void;
     getFunctionDescription(rfmName: string, callback: Function): void;
 }
 export declare class Server {
     private __server;
     constructor(serverParams: RfcConnectionParameters, clientParams: RfcConnectionParameters);
-    register(callback?: Function): Promise<unknown> | undefined;
+    start(callback?: Function): Promise<unknown> | undefined;
+    stop(callback?: Function): Promise<unknown> | undefined;
     addFunction(functionName: string, jsFunction: Function, callback?: Function): Promise<unknown> | undefined;
     removeFunction(functionName: string, callback?: Function): Promise<unknown> | undefined;
-    serve(callback?: Function): Promise<unknown> | undefined;
     getFunctionDescription(rfmName: string, callback?: Function): Promise<unknown> | undefined;
     static get environment(): NodeRfcEnvironment;
     get environment(): NodeRfcEnvironment;

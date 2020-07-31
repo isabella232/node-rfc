@@ -58,7 +58,7 @@ namespace node_rfc
     class Server : public Napi::ObjectWrap<Server>
     {
     public:
-        friend class ServeAsync;
+        friend class StartAsync;
         friend class GetFunctionDescAsync;
         static Napi::Object Init(Napi::Env env, Napi::Object exports);
         Server(const Napi::CallbackInfo &info);
@@ -71,10 +71,10 @@ namespace node_rfc
         Napi::Value ServerConnectionHandleGetter(const Napi::CallbackInfo &info);
         Napi::Value ClientConnectionHandleGetter(const Napi::CallbackInfo &info);
 
-        Napi::Value Register(const Napi::CallbackInfo &info);
+        Napi::Value Start(const Napi::CallbackInfo &info);
+        Napi::Value Stop(const Napi::CallbackInfo &info);
         Napi::Value AddFunction(const Napi::CallbackInfo &info);
         Napi::Value RemoveFunction(const Napi::CallbackInfo &info);
-        Napi::Value Serve(const Napi::CallbackInfo &info);
         Napi::Value GetFunctionDescription(const Napi::CallbackInfo &info);
         //RFC_RC SAP_API metadataLookup(SAP_UC *func_name, RFC_ATTRIBUTES rfc_attributes, RFC_FUNCTION_DESC_HANDLE *func_handle);
         //RFC_RC SAP_API genericHandler(RFC_CONNECTION_HANDLE conn_handle, RFC_FUNCTION_HANDLE func_handle, RFC_ERROR_INFO *errorInfo);

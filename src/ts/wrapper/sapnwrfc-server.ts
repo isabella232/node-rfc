@@ -38,14 +38,14 @@ export interface RfcServerBinding {
     _alive: boolean;
     _server_conn_handle: number;
     _client_conn_handle: number;
-    register(callback: Function): void;
+    start(callback: Function): void;
+    stop(callback: Function): void;
     addFunction(
         functionName: string,
         jsFunction: Function,
         callback: Function
     ): void;
     removeFunction(functionName: string, callback: Function): void;
-    serve(callback: Function): void;
     getFunctionDescription(rfmName: string, callback: Function): void;
 }
 
@@ -59,10 +59,10 @@ export class Server {
         this.__server = new noderfc_binding.Server(serverParams, clientParams);
     }
 
-    register(callback?: Function) {
+    start(callback?: Function) {
         if (isUndefined(callback)) {
             return new Promise((resolve, reject) => {
-                this.__server.register((err: any) => {
+                this.__server.start((err: any) => {
                     if (isUndefined(err)) {
                         resolve();
                     } else {
@@ -72,7 +72,23 @@ export class Server {
             });
         }
 
-        this.__server.register(callback);
+        this.__server.start(callback);
+    }
+
+    stop(callback?: Function) {
+        if (isUndefined(callback)) {
+            return new Promise((resolve, reject) => {
+                this.__server.stop((err: any) => {
+                    if (isUndefined(err)) {
+                        resolve();
+                    } else {
+                        reject(err);
+                    }
+                });
+            });
+        }
+
+        this.__server.stop(callback);
     }
 
     addFunction(
@@ -115,22 +131,6 @@ export class Server {
         this.__server.removeFunction(functionName, callback);
     }
 
-    serve(callback?: Function) {
-        if (isUndefined(callback)) {
-            return new Promise((resolve, reject) => {
-                this.__server.serve((err: any) => {
-                    if (isUndefined(err)) {
-                        resolve();
-                    } else {
-                        reject(err);
-                    }
-                });
-            });
-        }
-
-        this.__server.serve(callback);
-    }
-
     getFunctionDescription(rfmName: string, callback?: Function) {
         if (isUndefined(callback)) {
             return new Promise((resolve, reject) => {
@@ -147,7 +147,7 @@ export class Server {
             });
         }
 
-        this.__server.serve(callback);
+        this.__server.getFunctionDescription(rfmName, callback);
     }
 
     static get environment(): NodeRfcEnvironment {

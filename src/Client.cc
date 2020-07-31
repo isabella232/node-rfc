@@ -63,8 +63,8 @@ namespace node_rfc
             Napi::String name = paramNames.Get(ii).ToString();
             Napi::String value = clientParamsObject.Get(name).ToString();
             DEBUG("getConnectionParams ", name.Utf8Value(), ": ", value.Utf8Value());
-            clientParams->connectionParams[ii].name = fillString(name);
-            clientParams->connectionParams[ii].value = fillString(value);
+            clientParams->connectionParams[ii].name = setString(name);
+            clientParams->connectionParams[ii].value = setString(value);
         }
     }
 
@@ -580,7 +580,7 @@ namespace node_rfc
 
             if (result.first.IsUndefined())
             {
-                result = wrapResult(functionDescHandle, functionHandle, &client->errorPath, &client->client_options);
+                result = getRfmParameters(functionDescHandle, functionHandle, &client->errorPath, &client->client_options);
             }
 
             RfcDestroyFunction(functionHandle, NULL);
@@ -606,7 +606,7 @@ namespace node_rfc
             : Napi::AsyncWorker(callback), client(client),
               notRequested(Napi::Persistent(notRequestedParameters)), rfmParams(Napi::Persistent(rfmParams))
         {
-            funcName = fillString(rfmName);
+            funcName = setString(rfmName);
             client->errorPath.setFunctionName(funcName);
         }
         ~PrepareAsync()
@@ -653,7 +653,7 @@ namespace node_rfc
                     for (uint_t i = 0; i < notRequested.Value().Length(); i++)
                     {
                         Napi::String name = notRequested.Value().Get(i).ToString();
-                        SAP_UC *paramName = fillString(name);
+                        SAP_UC *paramName = setString(name);
                         RFC_RC rc = RfcSetParameterActive(functionHandle, paramName, 0, &errorInfo);
                         free(const_cast<SAP_UC *>(paramName));
                         if (rc != RFC_OK)
@@ -677,7 +677,7 @@ namespace node_rfc
                 {
                     Napi::String name = paramNames.Get(i).ToString();
                     Napi::Value value = params.Get(name);
-                    argv[0] = fillFunctionParameter(functionDescHandle, functionHandle, name, value, &client->errorPath, &client->client_options);
+                    argv[0] = setRfmParameter(functionDescHandle, functionHandle, name, value, &client->errorPath, &client->client_options);
 
                     if (!argv[0].IsUndefined())
                     {

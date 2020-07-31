@@ -34,9 +34,10 @@ namespace node_rfc
                                InstanceAccessor("_alive", &Server::AliveGetter, nullptr),
                                InstanceAccessor("_server_conn_handle", &Server::ServerConnectionHandleGetter, nullptr),
                                InstanceAccessor("_client_conn_handle", &Server::ClientConnectionHandleGetter, nullptr),
-                               InstanceMethod("register", &Server::Register),
+                               InstanceMethod("start", &Server::Start),
+                               InstanceMethod("stop", &Server::Stop),
                                InstanceMethod("addFunction", &Server::AddFunction),
-                               InstanceMethod("serve", &Server::Serve),
+                               InstanceMethod("removeFunction", &Server::RemoveFunction),
                                InstanceMethod("getFunctionDescription", &Server::GetFunctionDescription),
                            });
 
@@ -164,7 +165,7 @@ namespace node_rfc
         //
         //RfmErrorPath errorPath;
         //ClientOptionsStruct client_options;
-        //ValuePair jsContainer = wrapResult(func_desc_handle, func_handle, &errorPath, &client_options);
+        //ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &errorPath, &client_options);
 
         //
         // Call
@@ -186,7 +187,7 @@ namespace node_rfc
         //{
         //    Napi::String name = paramNames.Get(i).ToString();
         //    Napi::Value value = params.Get(name);
-        //    err = client->fillFunctionParameter(functionDescHandle, functionHandle, name, value);
+        //    err = client->setRfmParameter(functionDescHandle, functionHandle, name, value);
         //
         //    if (!err.IsUndefined())
         //    {
@@ -197,19 +198,19 @@ namespace node_rfc
         return RFC_OK;
     }
 
-    class ServeAsync : public Napi::AsyncWorker
+    class StartAsync : public Napi::AsyncWorker
     {
     public:
-        ServeAsync(Napi::Function &callback, Server *server)
+        StartAsync(Napi::Function &callback, Server *server)
             : Napi::AsyncWorker(callback), server(server) {}
-        ~ServeAsync()
+        ~StartAsync()
         {
         }
 
         void Execute()
         {
             server->LockMutex();
-            DEBUG("ServeAsync locked");
+            DEBUG("StartAsync locked");
             server->client_conn_handle = RfcOpenConnection(server->client_params.connectionParams, server->client_params.paramSize, &errorInfo);
             if (errorInfo.code != RFC_OK)
             {
@@ -246,7 +247,7 @@ namespace node_rfc
             DEBUG("Server:: launched ", (pointer_t)server->serverHandle)
 
             server->UnlockMutex();
-            DEBUG("ServeAsync unlocked");
+            DEBUG("StartAsync unlocked");
         }
 
         void OnOK()
@@ -301,59 +302,44 @@ namespace node_rfc
         RFC_ERROR_INFO errorInfo;
     };
 
-    Napi::Value Server::Register(const Napi::CallbackInfo &info)
+    Napi::Value Server::Start(const Napi::CallbackInfo &info)
     {
-        DEBUG("Server::Register");
+        DEBUG("Server::Serve");
 
         std::ostringstream errmsg;
 
         if (!info[0].IsFunction())
         {
-            errmsg << "Server register() requires a callback function; see" << USAGE_URL;
+            errmsg << "Server start() requires a callback function; see" << USAGE_URL;
+            Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+            return info.Env().Undefined();
+        }
+
+        Napi::Function callback = info[0].As<Napi::Function>();
+
+        (new StartAsync(callback, this))->Queue();
+
+        return info.Env().Undefined();
+    };
+
+    Napi::Value Server::Stop(const Napi::CallbackInfo &info)
+    {
+        DEBUG("Server::Stop");
+
+        std::ostringstream errmsg;
+
+        if (!info[0].IsFunction())
+        {
+            errmsg << "Server stop() requires a callback function; see" << USAGE_URL;
             Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
             return info.Env().Undefined();
         }
 
         //Napi::Function callback = info[0].As<Napi::Function>();
 
-        //(new RegisterAsync(callback, this))->Queue();
+        //(new StopAsync(callback, this))->Queue();
 
         return info.Env().Undefined();
-    };
-
-    Napi::Value Server::RemoveFunction(const Napi::CallbackInfo &info)
-    {
-        Napi::EscapableHandleScope scope(info.Env());
-
-        std::ostringstream errmsg;
-
-        if (!info[0].IsString())
-        {
-            errmsg << "Server removeFunction() requires ABAP RFM name; see" << USAGE_URL;
-            Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
-            return info.Env().Undefined();
-        }
-
-        std::string function_name = info[0].As<Napi::String>().Utf8Value();
-
-        if (!info[1].IsFunction())
-        {
-            errmsg << "Server removeFunction() requires a callback function; see" << USAGE_URL;
-            Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
-            return info.Env().Undefined();
-        }
-
-        Napi::Function callback = info[1].As<Napi::Function>();
-
-        //ServerFunctionsMap::iterator it = serverFunctions.find(function_name);
-
-        serverFunctions.erase(function_name);
-
-        DEBUG("Removed function ", function_name);
-        // todo destroy handle
-
-        callback.Call({});
-        return scope.Escape(info.Env().Undefined());
     };
 
     Napi::Value Server::AddFunction(const Napi::CallbackInfo &info)
@@ -401,7 +387,7 @@ namespace node_rfc
         // Install function
         RFC_ERROR_INFO errorInfo;
 
-        SAP_UC *func_name = fillString(functionName);
+        SAP_UC *func_name = setString(functionName);
 
         RFC_FUNCTION_DESC_HANDLE func_desc_handle = RfcGetFunctionDesc(client_conn_handle, func_name, &errorInfo);
 
@@ -422,24 +408,76 @@ namespace node_rfc
         return scope.Escape(info.Env().Undefined());
     };
 
-    Napi::Value Server::Serve(const Napi::CallbackInfo &info)
+    Napi::Value Server::RemoveFunction(const Napi::CallbackInfo &info)
     {
-        DEBUG("Server::Serve");
+        Napi::EscapableHandleScope scope(info.Env());
 
         std::ostringstream errmsg;
 
-        if (!info[0].IsFunction())
+        if (!info[0].IsString())
         {
-            errmsg << "Server register() requires a callback function; see" << USAGE_URL;
+            errmsg << "Server removeFunction() requires ABAP RFM name; see" << USAGE_URL;
             Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
             return info.Env().Undefined();
         }
 
-        Napi::Function callback = info[0].As<Napi::Function>();
+        Napi::String functionName = info[0].As<Napi::String>();
 
-        (new ServeAsync(callback, this))->Queue();
+        if (functionName.Utf8Value().length() == 0 || functionName.Utf8Value().length() > 30)
+        {
+            errmsg << "Server removeFunction() accepts max. 30 characters long ABAP RFM name; see" << USAGE_URL;
+            Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+            return info.Env().Undefined();
+        }
 
-        return info.Env().Undefined();
+        DEBUG("Server::RemoveFunction ", functionName.Utf8Value());
+
+        /*
+        if (!info[1].IsFunction())
+        {
+            errmsg << "Server removeFunction() requires a NodeJS handler function; see" << USAGE_URL;
+            Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+            return info.Env().Undefined();
+        }
+
+        Napi::Function jsFunction = info[1].As<Napi::Function>();
+        */
+        if (!info[1].IsFunction())
+        {
+            errmsg << "Server removeFunction() requires a callback function; see" << USAGE_URL;
+            Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+            return info.Env().Undefined();
+        }
+
+        Napi::Function callback = info[1].As<Napi::Function>();
+
+        // Remove function
+
+        SAP_UC *func_name = setString(functionName);
+
+        ServerFunctionsMap::iterator it = serverFunctions.begin();
+        while (it != serverFunctions.end())
+        {
+            if (strcmpU(func_name, it->second.func_name) == 0)
+            {
+                break;
+            }
+            it++;
+        }
+        free(func_name);
+
+        if (it == serverFunctions.end())
+        {
+            errmsg << "Server removeFunction() did not find function: " << functionName.Utf8Value();
+            callback.Call({nodeRfcError(errmsg.str())});
+            return scope.Escape(info.Env().Undefined());
+        }
+
+        DEBUG("Server::RemoveFunction removed ", functionName.Utf8Value(), ": ", (pointer_t)it->second.func_desc_handle);
+        serverFunctions.erase(it);
+
+        callback.Call({});
+        return scope.Escape(info.Env().Undefined());
     };
 
     Napi::Value Server::GetFunctionDescription(const Napi::CallbackInfo &info)
