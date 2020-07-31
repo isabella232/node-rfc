@@ -503,14 +503,53 @@ is managed, the pool leased connections set is updated.
 
 API: [api/server](api.md#server)
 
-To make an NodeJS function available in ABAP, it must provide an ABAP function definition.
-ABAP can then consume it just like any other ABAP RFM. Manual coding each parameter,
-structure, table and field metadata is tedious task and ABAP offer a simple solution here.
-Just create an empty ABAP RFM, with the signature that ABAP shall use, to consume the
-NodeJS function. The NodeJS function will automatically fetch this signature and represent
-itself as exactly such ABAP RFM. This local ABAP RFM can also help in testing and troubleshooting.
+The NodeJS function makes it available for ABAP consumption, by providing an ABAP function definition.
+ABAP can therefore call the NodeJS function, just like any other ABAP RFM. ABAP function definition defines
+each parameter, structure, table and field metadata. Coding it manually would be a tedious task and ABAP
+offer more elegant solution here.
 
-The `STFC_CONNECTION` ABAP RFM is consumed by NodeJS, in client scenarion examples.
+Create an empty ABAP RFM, with parameters that ABAP shall use, to communicate with NodeJS function.
+The NodeJS function will automatically fetch that RFM definition and represent itself as exactly such RFM,
+that ABAP can call just like any other ABAP RFM.
+
+As an example, let make the `STFC_CONNECTION` available as NodeJS RFM and call it from ABAP.
+
+### Function Definition
+
+The `STFC_CONNECTION` function definition is already available. No work required here and let have a look into signature.
+The function module accepts the `REQTEXT` input parameter and echoes it back as `ECHOTEXT`. In addition, the `RESPTEXT`
+with connection attributes is also sent back:
+
+```abap
+FUNCTION STFC_CONNECTION.
+*"----------------------------------------------------------------------
+*"*"Lokale Schnittstelle:
+*"       IMPORTING
+*"              REQUTEXT LIKE  SY-LISEL
+*"       EXPORTING
+*"              ECHOTEXT LIKE  SY-LISEL
+*"              RESPTEXT LIKE  SY-LISEL
+*"----------------------------------------------------------------------
+```
+
+### NodeJS Function
+
+Let provide the NodeJS function doing the same and of course any other logic can be implemented here.
+
+```nodejs
+function my_stfc_connection(request_context, REQUTEXT = "") {
+    console.log("istfc invoked !");
+    user = "uuu";
+    sysId = "sss";
+    client = "ccc";
+    partnerHost = "ppp";
+
+    return {
+        ECHOTEXT: REQUTEXT,
+        RESPTEXT: `Python server here. Connection attributes are:\nUser '${user}' from system '${sysId}', client '${client}', host '${partnerHost}'`,
+    };
+}
+```
 
 Let provide the `STFC_CONNECTION` RFM in NodeJS and consume it from ABAP.
 
