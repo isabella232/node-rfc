@@ -7,6 +7,9 @@
     -   [Constructor](#pool-constructor)
     -   [API](#pool-api)
 -   **[Server](#server)**
+    -   [Properties](#server-properties)
+    -   [Constructor](#server-constructor)
+    -   [API](#server-api)
 -   **[Throughput](#throughput)**
     -   [Properties](#throughput-properties)
     -   [Constructor](#throughput-constructor)
@@ -256,11 +259,27 @@ All open connections are anyway closed when Pool destructor called.
 closeAll(callback?: Function) // close all ready and leased connections
 ```
 
+## Server
+
+Usage: [usage/server](usage.md#server)
+
+<a name="server-properties"></a>
+
+### Properites
+
+<a name="server-constructor"></a>
+
+### Constructor
+
+<a name="server-api"></a>
+
+### Server API
+
 ## Throughput
 
 Usage: [usage/throughput](usage.md#throughput)
 
-<a name="throughput-properties"></a
+<a name="throughput-properties"></a>
 
 ### Properties
 
@@ -290,11 +309,9 @@ export interface RfcThroughputStatus {
 constructor(client?: Client | Array<Client>)
 ```
 
-## Server
+<a name="throughput-api"></a
 
-Usage: [usage/server](usage.md#server)
-
-### Throughput
+### Throughput API
 
 #### setOnConnection
 
