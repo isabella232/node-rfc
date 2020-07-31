@@ -532,17 +532,16 @@ FUNCTION STFC_CONNECTION.
 *"----------------------------------------------------------------------
 ```
 
-### NodeJS Function
+### NodeJS RFM
 
-Let provide the NodeJS function doing the same and of course any other logic can be implemented here.
+Let provide the NodeJS RFM mimicking the same logic and of course any other logic can be implemented here.
 
-```nodejs
-function my_stfc_connection(request_context, REQUTEXT = "") {
-    console.log("istfc invoked !");
-    user = "uuu";
-    sysId = "sss";
-    client = "ccc";
-    partnerHost = "ppp";
+```node
+function my_stfc_connection(
+    request_context,
+    abap_parameters: { REQUTEXT: "" }
+) {
+    console.log("NodeJS stfc invoked ", request_context);
 
     return {
         ECHOTEXT: REQUTEXT,
@@ -551,9 +550,132 @@ function my_stfc_connection(request_context, REQUTEXT = "") {
 }
 ```
 
-Let provide the `STFC_CONNECTION` RFM in NodeJS and consume it from ABAP.
+When invoked from ABAP, the first argument `request_context` provides some information about ABAP consumer
+and the second argument `abap_parameters` provides input parameters sent from ABAP.
 
-The ABAP signature is already available, therefore no need to create an empty ABAP RFM for that.
+### ABAP calls NodeJS RFM
+
+ABAP call looks like this:
+
+```abap
+*&---------------------------------------------------------------------*
+*& Report ZNODETEST
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT znodetest.
+
+DATA lv_echo LIKE sy-lisel.
+DATA lv_resp LIKE sy-lisel.
+
+CALL FUNCTION 'STFC_CONNECTION' DESTINATION 'NODEJS'
+  EXPORTING
+    requtext = 'Hello Nöde'
+  IMPORTING
+    echotext = lv_echo
+    resptext = lv_resp.
+
+WRITE lv_echo.
+WRITE lv_resp.
+```
+
+### Configuration
+
+The remote destination configuration is described in chapter "5 RFC Server Programs" of **[SAP NWRFC SDK 7.50 Programming Guide](https://support.sap.com/content/dam/support/en_us/library/ssp/products/connectors/nwrfcsdk/NW_RFC_750_ProgrammingGuide.pdf)**
+
+For this particular example, the configuration includes:
+
+**sapnwrfc.ini**
+
+The `client` connection parameters are required for RFM function definition retrival, just like in Client scenario.
+
+The `gateway` parameters are for the NodeJS server regitration in ABAP system.
+
+```ini
+DEST=client
+USER=demo
+PASSWD=welcome
+ASHOST=coevi51
+SYSNR=00
+CLIENT=620
+LANG=EN
+#TRACE=3
+
+DEST=gateway
+GWSERV=sapgw00
+GWHOST=coevi51
+PROGRAM_ID=SERVER1
+REG_COUNT=1
+```
+
+**SM59**
+
+The NodeJS destination is in SM59 look like
+
+![](assets/sm59node.png)
+
+**ABAP**
+
+```abap
+*&---------------------------------------------------------------------*
+*& Report ZSERVERTEST
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zservertest.
+
+
+DATA lv_echo LIKE sy-lisel.
+DATA lv_resp LIKE sy-lisel.
+
+CALL FUNCTION 'STFC_CONNECTION' DESTINATION 'NODEJS'
+  EXPORTING
+    requtext = 'XYZ'
+  IMPORTING
+    echotext = lv_echo
+    resptext = lv_resp.
+
+WRITE lv_echo.
+WRITE lv_resp.
+```
+
+**Node Server**
+
+```node
+const addon = require("../../lib");
+const Server = addon.Server;
+const server = new Server({ dest: "gateway" }, { dest: "MME" });
+
+// Callback function
+function my_stfc_connection(request_context, REQUTEXT = "") {
+    console.log("stfc invoked");
+    console.log("request_context", request_context);
+    console.log("abap_parameters", abap_parameters);
+
+    return {
+        ECHOTEXT: REQUTEXT,
+        RESPTEXT: `Node server here. Connection attributes are:\nUser '${user}' from system '${sysId}', client '${client}', host '${partnerHost}'`,
+    };
+}
+
+server.start((err) => {
+    if (err) return console.error("error:", err);
+    console.log(
+        `Server alive: ${server.alive} client handle: ${server.client_connection} server handle: ${server.server_connection}`
+    );
+
+    // Expose the my_stfc_connection function as RFM with STFC_CONNECTION pararameters (function definition)
+    const RFM_NAME = "STFC_CONNECTION";
+    server.addFunction(RFM_NAME, my_stfc_connection, (err) => {
+        if (err) return console.error(`error adding ${RFM_NAME}: ${err}`);
+    });
+});
+
+// let server serve
+setTimeout(function () {
+    console.log("bye!");
+}, 20 * 1000);
+```
 
 ## Throughput
 
