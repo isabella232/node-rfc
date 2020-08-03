@@ -51,6 +51,12 @@ typedef struct _ServerFunctionStruct
 } ServerFunctionStruct;
 
 typedef std::map<std::string, ServerFunctionStruct> ServerFunctionsMap;
+
+typedef struct
+{
+    napi_async_work work;
+    napi_threadsafe_function tsfn;
+} AddonData;
 namespace node_rfc
 {
     extern Napi::Env __env;
@@ -64,6 +70,7 @@ namespace node_rfc
         Server(const Napi::CallbackInfo &info);
         ~Server(void);
         ServerFunctionsMap serverFunctions;
+        AddonData *addon_data;
 
     private:
         Napi::Value IdGetter(const Napi::CallbackInfo &info);
@@ -102,6 +109,9 @@ namespace node_rfc
             serverHandle = NULL;
 
             uv_sem_init(&invocationMutex, 1);
+
+            addon_data = (AddonData *)malloc(sizeof(*addon_data));
+            addon_data->work = NULL;
         };
 
         static uint_t _id;

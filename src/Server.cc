@@ -14,8 +14,9 @@
 // language governing permissions and limitations under the License.
 
 #include "Server.h"
-#include <v8.h>
 
+#include <node_api.h>
+#include <assert.h>
 namespace node_rfc
 {
     extern Napi::Env __env;
@@ -23,6 +24,12 @@ namespace node_rfc
     uint_t Server::_id = 1;
 
     Server *__server = NULL;
+
+    typedef struct
+    {
+        napi_async_work work;
+        napi_threadsafe_function tsfn;
+    } AddonData;
 
     Napi::Object Server::Init(Napi::Env env, Napi::Object exports)
     {
@@ -446,16 +453,6 @@ namespace node_rfc
 
         DEBUG("Server::RemoveFunction ", functionName.Utf8Value());
 
-        /*
-        if (!info[1].IsFunction())
-        {
-            errmsg << "Server removeFunction() requires a NodeJS handler function; see" << USAGE_URL;
-            Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
-            return info.Env().Undefined();
-        }
-
-        Napi::Function jsFunction = info[1].As<Napi::Function>();
-        */
         if (!info[1].IsFunction())
         {
             errmsg << "Server removeFunction() requires a callback function; see" << USAGE_URL;
