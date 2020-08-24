@@ -120,7 +120,7 @@ To consume this function module from NodeJS, first the node-rfc client connectio
 
 API: [api/client](api.md#client)
 
-Using the client instance, ABAP RFMs can be consumed from NodeJS. The client constructor requires
+Using the node-rfc Client instance, ABAP RFMs can be consumed from NodeJS. The client constructor requires
 [connection parameters](#connection-parameters) to ABAP backend system and, optionally, [client options](#client-options).
 
 ### Connection Parameters
@@ -503,22 +503,22 @@ is managed, the pool leased connections set is updated.
 
 API: [api/server](api.md#server)
 
-The NodeJS function makes it available for ABAP consumption, by providing an ABAP function definition.
-ABAP can therefore call the NodeJS function, just like any other ABAP RFM. ABAP function definition defines
-each parameter, structure, table and field metadata. Coding it manually would be a tedious task and ABAP
-offer more elegant solution here.
+Using the node-rfc Server instance, NodeJS functions can be exposed and consumed from ABAP, using `CALL FUNCTION DESTINATION` ABAP statement. Just the same way like standard RFMs from ABAP systems.
 
-Create an empty ABAP RFM, with parameters that ABAP shall use, to communicate with NodeJS function.
-The NodeJS function will automatically fetch that RFM definition and represent itself as exactly such RFM,
-that ABAP can call just like any other ABAP RFM.
+To expose one NodeJS function for ABAP clients, the ABAP function definition must be provided, defining ABAP parameters through which the ABAP client can invoke the NodeJS function. When ABAP clients calls the NodeJS function, ABAP input parameters are automatically converted to NodeJS function input and the function is invoked. The function output is automatically converted to ABAP output parameters, returned back to ABAP client.
+
+ABAP function definition defines ABAP parameters and data definitions for all variables, structures and tables used in ABAP parameers. Coding these metadata down to field level is not very exciting task and node-rfc Server provides a more elegant solution here:
+
+-   Create an empty ABAP RFM in ABAP client system, with the same parameters that ABAP client shall use to invoke the NodeJS function
+-   Tell the node server that the function definition for NodeJS function X shall be the taken from the ABAP RFM Y, in ABAP client system
+
+When invoked by ABAP, the NodeJS function will automatically fetch the function definition from ABAP RFM and expose itself as exactly such RFM to ABAP
 
 As an example, let make the `STFC_CONNECTION` available as NodeJS RFM and call it from ABAP.
 
 ### Function Definition
 
-The `STFC_CONNECTION` function definition is already available. No work required here and let have a look into signature.
-The function module accepts the `REQTEXT` input parameter and echoes it back as `ECHOTEXT`. In addition, the `RESPTEXT`
-with connection attributes is also sent back:
+No work needed because the `STFC_CONNECTION` RFM is already available in ABAP client system. Let us have a look into signature. The function module accepts the `REQTEXT` input stirng and echoes it back as `ECHOTEXT` string. In addition, the `RESPTEXT` string with connection attributes is also sent back:
 
 ```abap
 FUNCTION STFC_CONNECTION.
@@ -532,9 +532,9 @@ FUNCTION STFC_CONNECTION.
 *"----------------------------------------------------------------------
 ```
 
-### NodeJS RFM
+### NodeJS function
 
-Let provide the NodeJS RFM mimicking the same logic and of course any other logic can be implemented here.
+Let provide the NodeJS function, mimicking the ABAP `STFC_CONNECTION` logic. Of course any other logic can be implemented here.
 
 ```node
 function my_stfc_connection(
@@ -544,14 +544,13 @@ function my_stfc_connection(
     console.log("NodeJS stfc invoked ", request_context);
 
     return {
-        ECHOTEXT: REQUTEXT,
-        RESPTEXT: `Python server here. Connection attributes are:\nUser '${user}' from system '${sysId}', client '${client}', host '${partnerHost}'`,
+        ECHOTEXT: abap_parameters.REQUTEXT,
+        RESPTEXT: `Python server here. Connection attributes are:\nUser '${request_context.user}' from system '${request_context.sysId}', client '${request_context.client}', host '${request_context.partnerHost}'`,
     };
 }
 ```
 
-When invoked from ABAP, the first argument `request_context` provides some information about ABAP consumer
-and the second argument `abap_parameters` provides input parameters sent from ABAP.
+When invoked from ABAP, the first argument `request_context` provides some information about ABAP consumer and the second argument `abap_parameters` provides input parameters sent from ABAP.
 
 ### ABAP calls NodeJS RFM
 
@@ -654,7 +653,7 @@ function my_stfc_connection(request_context, REQUTEXT = "") {
 
     return {
         ECHOTEXT: REQUTEXT,
-        RESPTEXT: `Node server here. Connection attributes are:\nUser '${user}' from system '${sysId}', client '${client}', host '${partnerHost}'`,
+        RESPTEXT: `Node server here. Connection attributes are:\nUser '${request_context.user}' from system '${request_context.sysId}', client '${request_context.client}', host '${request_context.partnerHost}'`,
     };
 }
 
